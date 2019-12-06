@@ -40,7 +40,7 @@ grafo_t *cria_grafo(int vertices)
 	int i;
 	aresta_t **matriz_adj;
 	/* Aloca estrutura do grafo */
-    grafo_t *g = malloc(sizeof(grafo_t));
+  grafo_t *g = malloc(sizeof(grafo_t));
 
 	if (g == NULL){
 		perror("cria_grafo (g)");
@@ -161,4 +161,34 @@ int adjacente(grafo_t *g, int u, int v){
 		return FALSE;
 
 	return ((g->matriz_adj[u][v].adj));
+}
+
+/**
+ * @brief Exporta os dados em formato DOT
+ * @param filename: nome do arquivo
+ * @param g: grafo a ser exportado
+ * @param n_linhas: total de linhas
+ */
+void dot_export(const char *filename, grafo_t *g, int n_linhas)
+{
+	int i,j;
+	FILE *fp;
+	fp = fopen(filename, "w");
+
+	if(fp == NULL)
+	{
+		perror("dot_export");
+		exit(EXIT_FAILURE);
+	}
+
+	fprintf(fp, "graph {\n");	// Cria o cabeçalho do arquivo
+
+	for (i=0; i < n_linhas; i++){
+		for (j=i; j < n_linhas; j++)
+		if(adjacente(g, i, j))
+			fprintf(fp, "\t%d -- %d\n", i, j);
+	}
+
+	fprintf(fp, "}");
+	fclose(fp);
 }

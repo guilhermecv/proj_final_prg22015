@@ -9,7 +9,7 @@
 #include <string.h>
 #include "dados.h"
 
-#define DEBUG_ON
+// #define DEBUG_ON
 
 
 /**

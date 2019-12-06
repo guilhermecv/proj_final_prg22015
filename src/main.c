@@ -1,88 +1,43 @@
 /**
  * @file main.c
+ *
+ * @author Guilherme Camargo Valese
+ *
+ * Árvore de espalhamento mínimo utilizando algoritmo de Kruskal
  */
 
 #include <stdio.h>
 #include <stdlib.h>
 #include "grafo.h"
-#include "fila.h"
+#include "dados.h"
+#include "selection_sort.h"
 
-#define FILENAME      "150x150.txt"
-
-void dot_export(grafo_t *g, int n_linhas);
+#define FILENAME      "rede_optica.csv"   // Nome do arquivo de dados
+#define DEBUG_ON
 
 int main(void)
 {
-  grafo_t *g;
+  int n_linhas;
 
-  int n_linhas = 0;
-  int id_fonte, id_destino;
-  float data;
+  dado_t **dados = ler_dados_csv(FILENAME, &n_linhas);
+  grafo_t *grafo = cria_grafo(n_linhas);
 
-  FILE *fp;
-  fp = fopen(FILENAME, "r");
-  if(!fp)
+  selection_sort(dados, n_linhas);
+
+
+  // CRIA O GRAFO ORIGINAL
+  int i;
+  for(i = 0; i < n_linhas; i++)
   {
-    perror("open_file()");
-    exit(-1);
-  }
-
-  while(!feof(fp))
-  {
-    fscanf(fp, "%d %d %f", &id_fonte, &id_destino, &data);
-    n_linhas++;
-  }
-
-  printf("\ncriando grafo com %d vertices\n", n_linhas);
-  g = cria_grafo(n_linhas);
-  rewind(fp);
-
-  while(!feof(fp))
-  {
-    fscanf(fp, "%d %d %f", &id_fonte, &id_destino, &data);
-
-    cria_adjacencia(g, id_fonte, id_destino);
-
 #ifdef DEBUG_ON
-    printf("%d, %d, %.2f\n", id_fonte, id_destino, data);
+    printf("%d, %d, %d, %d\n", dados[i]->id, dados[i]->origem, dados[i]->destino, dados[i]->peso);
 #endif
+    cria_adjacencia(grafo, dados[i]->origem, dados[i]->destino);
   }
+  dot_export("graph.dot", grafo, n_linhas);
 
-
-  printf("\nTotal de linhas lidas: %d\n", n_linhas);
-
-  dot_export(g, n_linhas);
-
-  
-	libera_grafo(g);
+  libera_grafo(grafo);
+  liberar_dados(dados, n_linhas);
 
   return EXIT_SUCCESS;
-}
-
-/**
- * @brief Exporta os dados em formato DOT
- * @param g: grafo a ser exportado
- */
-void dot_export(grafo_t *g, int n_linhas)
-{
-	int i,j;
-	FILE *fp;
-	fp = fopen("graph.dot", "w");
-
-	if(fp == NULL)
-	{
-		perror("dot_export");
-		exit(EXIT_FAILURE);
-	}
-
-	fprintf(fp, "graph {\n");	// Cria o cabeçalho do arquivo
-
-	for (i=0; i < n_linhas; i++){
-		for (j=i; j < n_linhas; j++)
-		if(adjacente(g, i, j))
-			fprintf(fp, "\t%d -- %d\n", i, j);
-	}
-
-	fprintf(fp, "}");
-	fclose(fp);
 }
