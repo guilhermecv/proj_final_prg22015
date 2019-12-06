@@ -8,17 +8,19 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+
 #include "grafo.h"
 
 struct vertices {
-	int id;         // Identificação do vértice
-  int fonte;
-  int destino;
-  float peso;
+	int id;         /*!< Identificação numérica do vértice  */
+
+    /* Mais informações, se necessário */
 };
 
 struct arestas {
 	int adj;        /*!< Valor booleando. Verdadeiro representa uma adjacência entre dois vértices  */
+
+    /* Mais informações, se necessário */
 };
 
 struct grafos{
@@ -159,41 +161,4 @@ int adjacente(grafo_t *g, int u, int v){
 		return FALSE;
 
 	return ((g->matriz_adj[u][v].adj));
-}
-
-float vertice_get_peso(grafo_t *grafo, int i)
-{
-  return grafo->vertices[i].peso;
-}
-
-void vertice_set_peso(grafo_t *grafo, int id, float peso)
-{
-  grafo->vertices[id].peso = peso;
-}
-/**
- * @brief Exporta os dados em formato DOT
- * @param g: grafo a ser exportado
- */
-void dot_export(const char *filename, grafo_t *g, int n_linhas)
-{
-	int i,j;
-	FILE *fp;
-	fp = fopen("graph.dot", "w");
-
-	if(fp == NULL)
-	{
-		perror("dot_export");
-		exit(EXIT_FAILURE);
-	}
-
-	fprintf(fp, "graph {\n");	// Cria o cabeçalho do arquivo
-
-	for (i=0; i < n_linhas; i++){
-		for (j=i; j < n_linhas; j++)
-		if(adjacente(g, i, j))
-			fprintf(fp, "\t%d -- %d [label=%.2f]\n", i, j, vertice_get_peso(g, i));
-	}
-
-	fprintf(fp, "}");
-	fclose(fp);
 }

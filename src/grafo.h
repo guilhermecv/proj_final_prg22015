@@ -21,9 +21,5 @@ void libera_grafo (grafo_t *g);
 int cria_adjacencia(grafo_t *g, int u, int v);
 int rem_adjacencia(grafo_t *g, int u, int v);
 int adjacente(grafo_t *g, int u, int v);
-void dot_export(const char *filename, grafo_t *g, int n_linhas);
-
-void vertice_set_peso(grafo_t *grafo, int id, float peso);
-
 
 #endif /* GRAFO_H_ */

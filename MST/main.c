@@ -9,21 +9,11 @@
 #include <stdlib.h>
 #include "grafo.h"
 #include "dados.h"
+#include "kruskal.h"
 
-//#include "kruskal.h"
-
-#define V     5     // Vertices
-#define E     5     // Arestas
 #define FILENAME  "dados.txt"
 #define GRAFO_ORIGINAL  "graph.dot"
 #define GRAFO_ORDENADO  "graph2.dot"
-
-/**
-  TODO
-  [ ] Gerar grafo
-  [ ] Exportar grafo
-  [ ] algoritmo MST
-*/
 
 int main(void)
 {
@@ -33,12 +23,12 @@ int main(void)
   grafo_t *grafo;
   grafo = cria_grafo(n_linhas);
 
-
+  constroi_grafo(grafo, FILENAME);
   dot_export(GRAFO_ORIGINAL, grafo, n_linhas);
 
-  // kruskal_mst(grafo);  // Realiza a ordenacao
+  printf("\nOrdenando grafo...\n");
+  kruskal_mst(grafo);  // Realiza a ordenacao
 
   libera_grafo(grafo);
-
   return EXIT_SUCCESS;
 }
