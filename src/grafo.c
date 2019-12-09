@@ -1,211 +1,366 @@
 /*
  * grafo.c
  *
- *  Created on: Nov 18, 2016
+ *  Created on: Jul 5, 2016
  *      Author: Renan Augusto Starke
+ *
+ *	Modified on: Oct 13, 2019
+ *			Guilherme Camargo Valese
  */
 
-#include <stdlib.h>
 #include <stdio.h>
-#include <string.h>
-
+#include <stdlib.h>
+#include <stdarg.h>
+#include <limits.h>
 #include "grafo.h"
+#include "vertice.h"
+#include "lista_enc.h"
+#include "no.h"
+// #include "fila.h"
+#include "pilha.h"
 
-struct vertices {
-	int id;         /*!< Identificação numérica do vértice  */
+#define FALSE 0
+#define TRUE 1
 
-    /* Mais informações, se necessário */
-};
+#define DEBUG
 
-struct arestas {
-	int adj;        /*!< Valor booleano. Verdadeiro representa uma adjacência entre dois vértices  */
-	int origem;
-	int destino;
-	int peso;
-	int marcado;
-};
+#define INFINITO INT_MAX
 
-struct grafos{
-	int n_vertices;        /*!< Número de vértices do grafo  */
-	vertice_t *vertices;   /*!< Vetor de ponteiros: conjunto V */
-	aresta_t **matriz_adj;	/* Matriz de adjacência: conjunto E */
+struct grafos {
+	int id;                    /*!< Identificação numérica do grafo  */
+	lista_enc_t *vertices;     /*!< Lista encadeada dos vértices: conjunto V  */
 };
 
 /**
-  * @brief  Cria uma novo grafo estático
-  * @param	vertices: quantidade de vértices
+  * @brief  Cria uma novo grafo
+  * @param	id: Identificação numérica do grafo
   *
   * @retval grafo_t: ponteiro para um novo grafo
   */
-grafo_t *cria_grafo(int vertices)
+grafo_t *cria_grafo(int id)
 {
-	int i;
-	aresta_t **matriz_adj;
-	/* Aloca estrutura do grafo */
-  grafo_t *g = malloc(sizeof(grafo_t));
+	grafo_t *p = NULL;
 
-	if (g == NULL){
-		perror("cria_grafo (g)");
+	p = (grafo_t*) malloc(sizeof(grafo_t));
+
+	if (p == NULL)	{
+		perror("cria_grafo:");
 		exit(EXIT_FAILURE);
 	}
 
-	/* Guarda número total de vértices */
-	g->n_vertices = vertices;
-    /* Aloca vértices */
-	g->vertices = malloc(vertices * sizeof(vertice_t));
+	p->id = id;
+	p->vertices = cria_lista_enc();
 
-	if (g->vertices == NULL){
-		perror("cria_grafo (vertices)");
+	return p;
+}
+
+/**
+  * @brief  Adicionar um vértice no grafo (conjunto V)
+  * @param	grafo: ponteiro do grafo que se deseja adicionar um vértice
+  * @param  id: identificação da vértice
+  *
+  * @retval vertice_t: ponteiro do vértice criado e adicionada no grafo
+  */
+vertice_t* grafo_adicionar_vertice(grafo_t *grafo, int id)
+{
+	vertice_t *vertice;
+	no_t *no;
+
+#ifdef DEBUG
+	printf("grafo_adicionar_vertice: %d\n", id);
+#endif
+
+	if (grafo == NULL)	{
+			fprintf(stderr,"grafo_adicionar_vertice: grafo invalido!");
+			exit(EXIT_FAILURE);
+	}
+
+	if (procura_vertice(grafo, id) != NULL) {
+		fprintf(stderr,"grafo_adicionar_vertice: vertice duplicado!\n");
 		exit(EXIT_FAILURE);
 	}
 
-	/* Zera vetor de vértices */
-	memset(g->vertices, 0, vertices * sizeof(vertice_t));
+	vertice = cria_vertice(id);
+	no = cria_no(vertice);
 
-    /* Aloca 1a dimensão da matriz de adjacência */
-	matriz_adj = malloc(vertices * sizeof(aresta_t *));
+	add_cauda(grafo->vertices, no);
 
-	if (matriz_adj == NULL){
-		perror("cria_grafo (matriz_adj)");
+	return vertice;
+}
+
+/**
+  * @brief  Procura um vértice com id específico no grafo
+  * @param	grafo: ponteiro do grafo que se deseja busca o vértice
+  * @param  id: identificação da aresta
+  *
+  * @retval vertice_t: ponteiro do vértice. NULL se não encontrado
+  */
+vertice_t* procura_vertice(grafo_t *grafo, int id)
+{
+	no_t *no_lista;
+	vertice_t *vertice;
+	int meu_id;
+
+	if (grafo == NULL)	{
+		fprintf(stderr,"procura_vertice: grafo invalido!");
 		exit(EXIT_FAILURE);
 	}
 
-	 /* Aloca 2a dimensão da matriz de adjacência */
-	for ( i = 0; i < vertices; i++ )
+	if (lista_vazia(grafo->vertices) == TRUE)
+		return FALSE;
+
+	no_lista = obter_cabeca(grafo->vertices);
+
+	while (no_lista)
 	{
-		matriz_adj[i] = calloc(vertices, sizeof(aresta_t));
+		//obtem o endereco da lista
+		vertice = obter_dado(no_lista);
 
-		if (matriz_adj[i] == NULL){
-			perror("cria_grafo (matriz_adj[i])");
+		//obterm o id do vertice
+		meu_id = vertice_get_id(vertice);
+
+		if (meu_id == id) {
+			return vertice;
+		}
+
+		no_lista = obtem_proximo(no_lista);
+	}
+
+	return NULL;
+}
+
+/**
+  * @brief  Cria adjacências.
+  * @param	grafo: ponteiro do grafo que contém o vértice (V pertence a G)
+  * @param  vertice: vértice fonte da(s) adjacências
+  * @param  n: número de parâmetros após n
+  * @param  ...: pares ordenados dos vertices destino e peso da aresta: (id vertice destino, peso aresta)
+  *
+  * @retval Nenhum
+  *
+  * Ex: adicionar uma aresta para o vertice 2 e 3 com respectivos pesos 9 e 15
+  * adiciona_adjacentes(grafo, vertice, 4(n), 2, 9, 3, 15);
+  */
+
+void adiciona_adjacentes(grafo_t *grafo, vertice_t *vertice, int n, ...)
+{
+	va_list argumentos;
+	vertice_t *sucessor;
+	arestas_t *aresta;
+
+	int id_sucessor;
+	int peso;
+    int x;
+
+	/* Initializing arguments to store all values after num */
+	va_start (argumentos, n);
+
+	for (x = 0; x < n; x=x+2 )
+	{
+		id_sucessor = va_arg(argumentos, int);
+		peso = va_arg(argumentos, int);
+
+		sucessor = procura_vertice(grafo, id_sucessor);
+
+		if (sucessor == NULL) {
+			fprintf(stderr, "adiciona_adjacentes: sucessor nao encontrado no grafo\n");
 			exit(EXIT_FAILURE);
 		}
+
+		aresta = cria_aresta(vertice, sucessor,peso);
+		adiciona_aresta(vertice, aresta);
+
+#ifdef DEBUG
+		printf("\tvertice: %d\n", vertice_get_id(vertice));
+		printf("\tsucessor: %d\n", id_sucessor);
+		printf("\tpeso: %d\n", peso);
+#endif
+
 	}
 
-	g->matriz_adj = matriz_adj;
+	va_end (argumentos);
+}
 
-	return g;
+/**
+  * @brief  Exporta o grafo em formato dot.
+  * @param	filename: nome do arquivo dot gerado
+  * @param  grafo: ponteiro do grafo a ser exportado
+  *
+  * @retval Nenhum
+  */
+void exportar_grafo_dot(const char *filename, grafo_t *grafo)
+{
+	FILE *file;
+
+	no_t *no_vert;
+	no_t *no_arest;
+	vertice_t *vertice;
+	vertice_t *adjacente;
+	arestas_t *aresta;
+	arestas_t *contra_aresta;
+	lista_enc_t *lista_arestas;
+
+	int peso;
+
+	if (filename == NULL || grafo == NULL){
+		fprintf(stderr, "exportar_grafo_dot: ponteiros invalidos\n");
+		exit(EXIT_FAILURE);
+	}
+
+	file = fopen(filename, "w");
+
+	if (file == NULL){
+		perror("exportar_grafo_dot:");
+		exit(EXIT_FAILURE);
+	}
+
+	fprintf(file, "graph {\n");
+
+	//obtem todos os nos da lista
+	no_vert = obter_cabeca(grafo->vertices);
+	while (no_vert){
+		vertice = obter_dado(no_vert);
+
+		//obtem todos as arestas
+		lista_arestas = vertice_get_arestas(vertice);
+
+		no_arest = obter_cabeca(lista_arestas);
+		while (no_arest) {
+			aresta = obter_dado(no_arest);
+
+			//ignora caso já exportada
+			if (aresta_get_status(aresta) == EXPORTADA) {
+				no_arest = obtem_proximo(no_arest);
+				continue;
+			}
+
+			//marca como exportada esta aresta
+			aresta_set_status(aresta, EXPORTADA);
+			adjacente = aresta_get_adjacente(aresta);
+
+			//marca contra-aresta também como exporta no caso de grafo não direcionados
+			contra_aresta = procurar_adjacente(adjacente, vertice);
+			aresta_set_status(contra_aresta, EXPORTADA);
+
+			//obtem peso
+			peso = aresta_get_peso(aresta);
+
+			fprintf(file, "\t%d -- %d [label = %d];\n",
+					vertice_get_id(vertice),
+					vertice_get_id(adjacente),
+					peso);
+
+			no_arest = obtem_proximo(no_arest);
+		}
+		no_vert = obtem_proximo(no_vert);
+	}
+	fprintf(file, "}\n");
+	fclose(file);
 }
 
 /**
   * @brief  Libera a memória utilizada pelo grafo
-  * @param	Nenhum
+  * @param  grafo: ponteiro do grafo a ser exportado
   *
   * @retval Nenhum
   */
-void libera_grafo (grafo_t *g){
-	int i;
+void libera_grafo (grafo_t *grafo){
+	no_t *no_vert;
+	no_t *no_arest;
+	no_t *no_liberado;
+	vertice_t *vertice;
+	arestas_t *aresta;
+	lista_enc_t *lista_arestas;
 
-	if (g == NULL){
-		perror("libera_grafo");
+	if (grafo == NULL) {
+		fprintf(stderr, "libera_grafo: grafo invalido\n");
 		exit(EXIT_FAILURE);
 	}
 
-	for (i=0; i < g->n_vertices; i++)
-		free(g->matriz_adj[i]);
+	//varre todos os vertices
+	no_vert = obter_cabeca(grafo->vertices);
+	while (no_vert){
+		vertice = obter_dado(no_vert);
 
-	free(g->matriz_adj);
-	free(g->vertices);
-	free(g);
-}
+		//libera todas as arestas
+		lista_arestas = vertice_get_arestas(vertice);
+		no_arest = obter_cabeca(lista_arestas);
+		while (no_arest){
+			aresta = obter_dado(no_arest);
 
-/**
-  * @brief  Cria adjacência entre vértices u e v
-  * @param	u: índice do vértice u
-  * @param  v: índice do vértice v
-  *
-  * @retval int: verdadeiro se adjacência for criada
-  */
-int cria_adjacencia(grafo_t *g, int u, int v){
+			//libera aresta
+			free(aresta);
 
-	if (g == NULL){
-		return FALSE;
+			//libera no da lsita
+			no_liberado = no_arest;
+			no_arest = obtem_proximo(no_arest);
+			free(no_liberado);
+		}
+
+		//libera lista de arestas e vertice
+		free(lista_arestas);
+		free(vertice);
+
+		//libera no da lista
+		no_liberado = no_vert;
+		no_vert = obtem_proximo(no_vert);
+		free(no_liberado);
 	}
 
-	if (u > g->n_vertices || v > g->n_vertices )
-		return FALSE;
-
-	g->matriz_adj[u][v].adj = TRUE;
-
-	return TRUE;
+	//libera grafo e vertice
+	free(grafo->vertices);
+	free(grafo);
 }
 
 /**
-  * @brief  Remove adjacência entre vértices u e v
-  * @param	u: índice do vértice u
-  * @param  v: índice do vértice v
-  *
-  * @retval int: verdadeiro se adjacência for removida
-  */
-int rem_adjacencia(grafo_t *g, int u, int v){
-
-	if (g == NULL){
-		return FALSE;
-	}
-
-	if (u > g->n_vertices || v > g->n_vertices)
-		return FALSE;
-
-	g->matriz_adj[u][v].adj = FALSE;
-
-	return TRUE;
-}
-
-/**
-  * @brief  Retorna adjacência entre vértices u e v
-  * @param	u: índice do vértice u
-  * @param  v: índice do vértice v
-  *
-  * @retval int: verdadeiro se u for adjacente a v
-  */
-int adjacente(grafo_t *g, int u, int v){
-
-	if (u > MAX_VERTICES || v > MAX_VERTICES)
-		return FALSE;
-
-	return ((g->matriz_adj[u][v].adj));
-}
-
-/**
- * @brief Retorna o peso de uma aresta
- * @param	u: índice do vértice u
- * @param v: índice do vértice v
- * @param *g: grafo
- * @return int: peso da aresta
+ * @brief Algoritmo de kruskal
+ * @param *grafo: grafo onde sera realizada a busca
+ * @return 
  */
-int aresta_get_peso(grafo_t *g, int u, int v)
+void kruskal_mst(grafo_t *grafo)
 {
-	if (u > MAX_VERTICES || v > MAX_VERTICES)
-		return FALSE;
-		
-	return(g->matriz_adj[u][v].peso);
-}
+	int custo_total = 0;
+	int peso_aresta;
+	int menor_peso = INFINITO;
 
-/**
- * @brief Exporta os dados em formato DOT
- * @param filename: nome do arquivo
- * @param g: grafo a ser exportado
- * @param n_linhas: total de linhas
- */
-void dot_export(const char *filename, grafo_t *g, int n_linhas)
-{
-	int i,j;
-	FILE *fp;
-	fp = fopen(filename, "w");
+	no_t *no_vert;
+	no_t *no_arest;
+	vertice_t *vertice;
+	vertice_t *adjacente;
+	arestas_t *aresta;
+	arestas_t *contra_aresta;
+	lista_enc_t *lista_arestas;
 
-	if(fp == NULL)
+	if(grafo == NULL)
 	{
-		perror("dot_export");
+		fprintf(stderr, "kruskal_mst: ponteiros invalidos");
 		exit(EXIT_FAILURE);
 	}
 
-	fprintf(fp, "graph {\n");	// Cria o cabeçalho do arquivo
+	//obtem todos os nos da lista
+	no_vert = obter_cabeca(grafo->vertices);
 
-	for (i=0; i < n_linhas; i++){
-		for (j=i; j < n_linhas; j++)
-		if(adjacente(g, i, j))
-			fprintf(fp, "\t%d -- %d\n", i, j);
+	while (no_vert){
+		vertice = obter_dado(no_vert);
+		lista_arestas = vertice_get_arestas(vertice);
+
+		no_arest = obter_cabeca(lista_arestas);
+		while (no_arest) {
+			aresta = obter_dado(no_arest);
+			peso_aresta = aresta_get_peso(aresta);		// Obtem peso da aresta
+
+			if(peso_aresta < menor_peso)
+			{
+				menor_peso = peso_aresta;		
+			}
+
+
+
+
+
+
+			no_arest = obtem_proximo(no_arest);
+		}
+		no_vert = obtem_proximo(no_vert);
 	}
-
-	fprintf(fp, "}");
-	fclose(fp);
 }
