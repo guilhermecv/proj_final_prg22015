@@ -18,9 +18,11 @@ struct vertices {
 };
 
 struct arestas {
-	int adj;        /*!< Valor booleando. Verdadeiro representa uma adjacência entre dois vértices  */
-
-    /* Mais informações, se necessário */
+	int adj;        /*!< Valor booleano. Verdadeiro representa uma adjacência entre dois vértices  */
+	int origem;
+	int destino;
+	int peso;
+	int marcado;
 };
 
 struct grafos{
@@ -161,6 +163,21 @@ int adjacente(grafo_t *g, int u, int v){
 		return FALSE;
 
 	return ((g->matriz_adj[u][v].adj));
+}
+
+/**
+ * @brief Retorna o peso de uma aresta
+ * @param	u: índice do vértice u
+ * @param v: índice do vértice v
+ * @param *g: grafo
+ * @return int: peso da aresta
+ */
+int aresta_get_peso(grafo_t *g, int u, int v)
+{
+	if (u > MAX_VERTICES || v > MAX_VERTICES)
+		return FALSE;
+		
+	return(g->matriz_adj[u][v].peso);
 }
 
 /**

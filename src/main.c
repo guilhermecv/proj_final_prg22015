@@ -10,7 +10,8 @@
 #include <stdlib.h>
 #include "grafo.h"
 #include "dados.h"
-#include "selection_sort.h"
+#include "insertion_sort.h"
+#include "kruskal.h"
 
 #define FILENAME      "rede_optica.csv"   // Nome do arquivo de dados
 #define DEBUG_ON
@@ -18,12 +19,10 @@
 int main(void)
 {
   int n_linhas;
-
   dado_t **dados = ler_dados_csv(FILENAME, &n_linhas);
+  insertion_sort(dados, n_linhas);    // Ordena os dados por peso das arestas
+
   grafo_t *grafo = cria_grafo(n_linhas);
-
-  selection_sort(dados, n_linhas);
-
 
   // CRIA O GRAFO ORIGINAL
   int i;
@@ -40,4 +39,9 @@ int main(void)
   liberar_dados(dados, n_linhas);
 
   return EXIT_SUCCESS;
+}
+
+void krusal_mst(grafo_t *grafo)
+{
+  
 }
