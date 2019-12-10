@@ -23,6 +23,7 @@
 #define TRUE 1
 
 #define DEBUG
+#define DEBUG_ON_KRUSKAL
 
 #define INFINITO INT_MAX
 
@@ -317,18 +318,17 @@ void libera_grafo (grafo_t *grafo){
  * @param *grafo: grafo onde sera realizada a busca
  * @return 
  */
-void kruskal_mst(grafo_t *grafo)
+void kruskal_mst(grafo_t *grafo, grafo_t *g_out)
 {
 	int custo_total = 0;
-	int peso_aresta;
-	int menor_peso = INFINITO;
+	int peso_aresta, menor_peso = INFINITO;
+	int id_aresta;
 
 	no_t *no_vert;
 	no_t *no_arest;
-	vertice_t *vertice;
+	vertice_t *vertice, *vertice_out;
 	vertice_t *adjacente;
 	arestas_t *aresta;
-	arestas_t *contra_aresta;
 	lista_enc_t *lista_arestas;
 
 	if(grafo == NULL)
@@ -337,30 +337,45 @@ void kruskal_mst(grafo_t *grafo)
 		exit(EXIT_FAILURE);
 	}
 
+
+	int i, j;
+
 	//obtem todos os nos da lista
 	no_vert = obter_cabeca(grafo->vertices);
 
 	while (no_vert){
 		vertice = obter_dado(no_vert);
 		lista_arestas = vertice_get_arestas(vertice);
-
 		no_arest = obter_cabeca(lista_arestas);
+
 		while (no_arest) {
-			aresta = obter_dado(no_arest);
-			peso_aresta = aresta_get_peso(aresta);		// Obtem peso da aresta
+
+			aresta = obter_dado(no_arest);								// Obtem a aresta
+			printf("\nanalisando vertice %d", vertice_get_id(vertice));
+
+			//marca como exportada esta aresta
+			adjacente = aresta_get_adjacente(aresta);
+			peso_aresta = aresta_get_peso(aresta);						// Obtem peso da aresta
+			
+#ifdef DEBUG_ON_KRUSKAL
+				printf("\t%d -- %d [label = %d];\n",
+				vertice_get_id(vertice),
+				vertice_get_id(adjacente),
+				peso_aresta);
+#endif
 
 			if(peso_aresta < menor_peso)
 			{
-				menor_peso = peso_aresta;		
+				menor_peso = peso_aresta;								// Aresta de menor peso encontrada no vertice
+				i = vertice_get_id(vertice);
+				j = vertice_get_id(adjacente);
 			}
 
-
-
-
-
+			
 
 			no_arest = obtem_proximo(no_arest);
-		}
-		no_vert = obtem_proximo(no_vert);
-	}
+		} // while(no_arest)
+
+		no_vert = obtem_proximo(no_vert);		// Segue para o proximo vertice
+	}// while(no_vert)
 }

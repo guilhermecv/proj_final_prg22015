@@ -7,9 +7,11 @@
 
 #include <stdlib.h>
 #include <stdio.h>
-
 #include "vertice.h"
 #include "lista_enc.h"
+
+#define TRUE		1
+#define FALSE		0
 
 struct vertices {
 	int id;                /*!< Identificação numérica do vértice  */
@@ -93,7 +95,7 @@ arestas_t *cria_aresta(vertice_t *fonte, vertice_t *destino, int peso)
 	p->peso = peso;
 	p->fonte = fonte;
 	p->dest = destino;
-
+	p->visitada = 0;
 	return p;
 }
 
@@ -178,7 +180,7 @@ arestas_t *procurar_adjacente(vertice_t *vertice, vertice_t *adjacente)
 	arestas_t *aresta;
 
 	if (vertice == NULL){
-		fprintf(stderr, "procurar_adjacente: aresta invalido\n");
+		fprintf(stderr, "procurar_adjacente: aresta invalida\n");
 		exit(EXIT_FAILURE);
 	}
 
@@ -288,4 +290,25 @@ void vertice_set_distance(vertice_t *vertice, int distance)
 	}
 
 	
+}
+
+void aresta_set_visited(arestas_t *aresta)
+{
+	if (aresta == NULL){
+		fprintf(stderr, "aresta_set_visited: aresta invalida\n");
+		exit(EXIT_FAILURE);
+	}
+
+	aresta->visitada = 1;
+}
+
+int aresta_visitada(arestas_t *aresta)
+{
+	if(aresta == NULL)
+	{
+		fprintf(stderr, "\naresta_visited(): ponteiro invalido");
+		exit(EXIT_FAILURE);
+	}
+
+	return (aresta->visitada);
 }

@@ -22,12 +22,17 @@
 int main(void) {
 
 	grafo_t *grafo;
+	grafo_t *grafo_out;
+
 	vertice_t* vertice;
 
 	fila_t *fila;
 	int id;
 
+	printf("\nCriando grafo... \n");
 	grafo = cria_grafo(0);
+	grafo_out = cria_grafo(1);
+
 	fila = cria_fila();
 
 	//Adiciona todos os vertices no grafo
@@ -96,32 +101,16 @@ int main(void) {
 			case 6:
 				adiciona_adjacentes(grafo, vertice, 6, 1, 14, 3, 2, 5, 9);
 				break;
-			case 7:
-				// adiciona_adjacentes(grafo, vertice, 2, 8, 9);
-				break;
-			case 8:
-				// adiciona_adjacentes(grafo, vertice, 4, 7, 9, 9, 4);
-				break;
-			case 9:
-				// adiciona_adjacentes(grafo, vertice, 2, 8, 4);
-				break;
-			case 10:
-				// adiciona_adjacentes(grafo, vertice, 4, 11, 1, 12, 8);
-				break;
-			case 11:
-				// adiciona_adjacentes(grafo, vertice, 4, 10, 1, 12, 4);
-				break;
-			case 12:
-				// adiciona_adjacentes(grafo, vertice, 4, 11, 4, 10, 8);
-				break;
+
 			default:
 				break;
 		}
 	}
 
-	exportar_grafo_dot("graph.dot", grafo);
+	// exportar_grafo_dot("graph.dot", grafo);
 
-	
+	kruskal_mst(grafo, grafo_out);
+
 	libera_fila(fila);
 	libera_grafo(grafo);
 

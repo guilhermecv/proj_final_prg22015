@@ -64,6 +64,9 @@ int vertice_get_grupo(vertice_t *vertice);
 
 
 void vertice_set_distance(vertice_t *vertice, int distance);
+void aresta_set_visited(arestas_t *aresta);
+int aresta_visitada(arestas_t *aresta);
+
 
 
 #endif /* GRAFO_VERTICE_H_ */
