@@ -67,6 +67,8 @@ void vertice_set_distance(vertice_t *vertice, int distance);
 void aresta_set_visited(arestas_t *aresta);
 int aresta_visitada(arestas_t *aresta);
 
+void vertice_set_visited(vertice_t *vertice);
+int vertice_visitado(vertice_t *vertice);
 
 
 #endif /* GRAFO_VERTICE_H_ */

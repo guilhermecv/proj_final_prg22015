@@ -51,6 +51,7 @@ int busca_vertice(lista_enc_t *lista, vertice_t *vertice_procurado);
 lista_enc_t* componentes_conexos(grafo_t *grafo);
 
 void kruskal_mst(grafo_t *grafo, grafo_t *g_out);
+void prim_mst(grafo_t *grafo, int inicial);
 
 
 #endif /* GRAFO_GRAFO_H_ */

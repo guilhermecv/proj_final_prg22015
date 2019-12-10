@@ -22,7 +22,7 @@
 #define FALSE 0
 #define TRUE 1
 
-#define DEBUG
+// #define DEBUG
 #define DEBUG_ON_KRUSKAL
 
 #define INFINITO INT_MAX
@@ -316,12 +316,12 @@ void libera_grafo (grafo_t *grafo){
 /**
  * @brief Algoritmo de kruskal
  * @param *grafo: grafo onde sera realizada a busca
- * @return 
+ * @return
  */
 void kruskal_mst(grafo_t *grafo, grafo_t *g_out)
 {
 	int custo_total = 0;
-	int peso_aresta, menor_peso = INFINITO;
+	int peso_aresta;
 	int id_aresta;
 
 	no_t *no_vert;
@@ -347,16 +347,16 @@ void kruskal_mst(grafo_t *grafo, grafo_t *g_out)
 		vertice = obter_dado(no_vert);
 		lista_arestas = vertice_get_arestas(vertice);
 		no_arest = obter_cabeca(lista_arestas);
-
+		int menor_peso = INFINITO;
 		while (no_arest) {
 
 			aresta = obter_dado(no_arest);								// Obtem a aresta
 			printf("\nanalisando vertice %d", vertice_get_id(vertice));
 
-			//marca como exportada esta aresta
+
 			adjacente = aresta_get_adjacente(aresta);
 			peso_aresta = aresta_get_peso(aresta);						// Obtem peso da aresta
-			
+
 #ifdef DEBUG_ON_KRUSKAL
 				printf("\t%d -- %d [label = %d];\n",
 				vertice_get_id(vertice),
@@ -371,11 +371,100 @@ void kruskal_mst(grafo_t *grafo, grafo_t *g_out)
 				j = vertice_get_id(adjacente);
 			}
 
-			
+
 
 			no_arest = obtem_proximo(no_arest);
 		} // while(no_arest)
 
 		no_vert = obtem_proximo(no_vert);		// Segue para o proximo vertice
 	}// while(no_vert)
+}
+
+void prim_mst(grafo_t *grafo, int inicial)
+{
+	no_t *no_vert;
+	no_t *no_arest;
+	vertice_t *vertice, *vertice_out;
+	vertice_t *adjacente;
+	arestas_t *aresta;
+	arestas_t *contra_aresta;
+	lista_enc_t *lista_arestas;
+
+	int id_aresta, change;
+	int peso_aresta;
+
+	if(grafo == NULL)
+	{
+		fprintf(stderr, "prim_mst: ponteiros invalidos");
+		exit(EXIT_FAILURE);
+	}
+	//obtem todos os nos da lista
+	no_vert = obter_cabeca(grafo->vertices);
+
+	while (no_vert){
+		vertice = obter_dado(no_vert);
+		lista_arestas = vertice_get_arestas(vertice);
+		no_arest = obter_cabeca(lista_arestas);
+
+		int menor_peso = INFINITO;
+
+		while (no_arest) {
+
+			aresta = obter_dado(no_arest);										// Obtem a aresta
+#ifdef DEBUG
+			printf("\nanalisando vertice %d", vertice_get_id(vertice));
+#endif
+
+			if(vertice_visitado(vertice))
+			{
+				printf("\no vertice ja foi visitado\n");
+				no_arest = obtem_proximo(no_arest);
+				continue;
+			}
+
+			adjacente = aresta_get_adjacente(aresta);
+			contra_aresta = procurar_adjacente(adjacente, vertice);
+
+			peso_aresta = aresta_get_peso(aresta);						// Obtem peso da aresta
+			int peso_contra_aresta = aresta_get_peso(contra_aresta);
+
+			int menor_peso_temp;
+
+			if(peso_aresta < peso_contra_aresta)
+				menor_peso_temp = peso_aresta;
+			else
+				menor_peso_temp = peso_contra_aresta;
+
+
+			if(peso_aresta < menor_peso)
+			{
+				change = 1;
+				menor_peso = peso_aresta;
+				id_aresta = vertice_get_id(adjacente);
+#ifdef DEBUG
+				printf("\nid_aresta %d, peso %d", id_aresta, menor_peso);
+#endif
+			}
+
+			no_arest = obtem_proximo(no_arest);
+		} // while(no_arest)
+
+		if(change)
+		{
+			vertice_set_visited(adjacente);
+			change = 0;
+// #ifdef DEBUG
+			printf("\nVertice %d marcado\n", vertice_get_id(adjacente));
+// #endif
+			printf("\t%d -- %d [label = %d];\n",
+			vertice_get_id(vertice),
+			id_aresta,
+			menor_peso);
+
+		}
+
+		no_vert = obtem_proximo(no_vert);		// Segue para o proximo vertice
+	}// while(no_vert)
+
+
 }

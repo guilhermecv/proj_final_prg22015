@@ -20,7 +20,7 @@ struct vertices {
 	/* Informações para componentes conexos */
 	int id_grupo;
 	vertice_t* pai;
-
+	int visitado;
 };
 
 struct arestas {
@@ -28,7 +28,7 @@ struct arestas {
 	vertice_t *fonte;  /*!< Vértice fonte. Geralmente vértice pertencente a lista de arestas do vértice */
 	vertice_t *dest;   /*!< Vértice destino */
 	int visitada;		// Marca se a aresta ja foi visitada
-	
+
 	status_aresta_t status;     /*!< Estado de exportação. Utilizado na função de exportação para dot. */
 };
 
@@ -53,6 +53,8 @@ vertice_t *cria_vertice(int id)
 	p->arestas = cria_lista_enc();
 	p->id_grupo = -1;
 	p->pai = NULL;
+
+	p->visitado = 0;
 
 	return p;
 }
@@ -289,7 +291,7 @@ void vertice_set_distance(vertice_t *vertice, int distance)
 		exit(EXIT_FAILURE);
 	}
 
-	
+
 }
 
 void aresta_set_visited(arestas_t *aresta)
@@ -311,4 +313,14 @@ int aresta_visitada(arestas_t *aresta)
 	}
 
 	return (aresta->visitada);
+}
+
+void vertice_set_visited(vertice_t *vertice)
+{
+	vertice->visitado = 0;
+}
+
+int vertice_visitado(vertice_t *vertice)
+{
+	return(vertice->visitado);
 }

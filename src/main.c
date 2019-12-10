@@ -107,9 +107,10 @@ int main(void) {
 		}
 	}
 
-	// exportar_grafo_dot("graph.dot", grafo);
+	exportar_grafo_dot("graph.dot", grafo);
 
-	kruskal_mst(grafo, grafo_out);
+	// kruskal_mst(grafo, grafo_out);
+	prim_mst(grafo, 1);
 
 	libera_fila(fila);
 	libera_grafo(grafo);
